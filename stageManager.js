@@ -1,0 +1,206 @@
+// Infinite Level Progression System
+class StageManager {
+    constructor() {
+        this.currentLevel = 1;
+        this.totalKills = 0;
+        this.killsThisLevel = 0;
+        this.killsRequiredForLevel = 20; // Kills needed for level 1
+
+        // Boss system
+        this.bossActive = false;
+        this.currentBoss = null;
+
+        // Difficulty scaling
+        this.baseEnemySpeed = 2;
+        this.baseSpawnRate = 60;
+        this.difficultyMultiplier = 1.0;
+    }
+
+    getEnemyTypes() {
+        // Unlock more enemy types as player progresses
+        if (this.currentLevel >= 10) {
+            return [Enemy, TankEnemy, SplitterEnemy];
+        } else if (this.currentLevel >= 5) {
+            return [Enemy, TankEnemy];
+        } else {
+            return [Enemy];
+        }
+    }
+
+    spawnEnemy() {
+        // Spawn at random edge
+        let x, y;
+        let edge = floor(random(4));
+
+        switch (edge) {
+            case 0: x = random(width); y = -20; break;
+            case 1: x = width + 20; y = random(height); break;
+            case 2: x = random(width); y = height + 20; break;
+            case 3: x = -20; y = random(height); break;
+        }
+
+        // Select random enemy type for this level
+        let enemyTypes = this.getEnemyTypes();
+        let EnemyClass = random(enemyTypes);
+        let enemy = new EnemyClass(x, y);
+
+        // Scale enemy difficulty
+        enemy.maxSpeed *= this.difficultyMultiplier;
+        enemy.damage = floor(enemy.damage * this.difficultyMultiplier);
+        enemy.health = floor(enemy.health * (1 + (this.currentLevel - 1) * 0.1));
+
+        return enemy;
+    }
+
+    spawnBoss() {
+        // Spawn at center
+        let x = width / 2;
+        let y = height / 2;
+
+        // Cycle through bosses (levels 5, 10, 15, 20 => Boss1-4, then repeat)
+        let bossIndex = floor((this.currentLevel / 5) - 1) % 4;
+
+        switch (bossIndex) {
+            case 0: this.currentBoss = new Boss1(x, y); break;
+            case 1: this.currentBoss = new Boss2(x, y); break;
+            case 2: this.currentBoss = new Boss3(x, y); break;
+            case 3: this.currentBoss = new Boss4(x, y); break;
+        }
+
+        this.bossActive = true;
+
+        // Boss announcement flash
+        this.showLevelUpFlash = true;
+        this.levelUpFlashTimer = 120; // 2 seconds
+    }
+
+    onEnemyKilled() {
+        this.killsThisLevel++;
+        this.totalKills++;
+
+        // Check if level complete
+        if (this.killsThisLevel >= this.getKillsRequired()) {
+            this.levelUp();
+        }
+    }
+
+    onBossDefeated() {
+        this.bossActive = false;
+        this.currentBoss = null;
+
+        // Boss defeated flash
+        this.showLevelUpFlash = true;
+        this.levelUpFlashTimer = 90;
+    }
+
+    getKillsRequired() {
+        // Kills required scales: 20, 25, 30, 35...
+        return floor(this.killsRequiredForLevel + (this.currentLevel - 1) * 5);
+    }
+
+    getLevelProgress() {
+        // Return 0-1 progress through current level
+        return this.killsThisLevel / this.getKillsRequired();
+    }
+
+    levelUp() {
+        this.currentLevel++;
+        this.killsThisLevel = 0;
+
+        // Increase difficulty
+        this.difficultyMultiplier = 1 + (this.currentLevel - 1) * 0.15;
+
+        // Check if boss level (every 5 levels)
+        if (this.currentLevel % 5 === 0) {
+            this.spawnBoss();
+        } else {
+            // Visual feedback (flash)
+            this.showLevelUpFlash = true;
+            this.levelUpFlashTimer = 60; // 1 second
+        }
+    }
+
+    updateLevelUpFlash() {
+        if (this.showLevelUpFlash) {
+            this.levelUpFlashTimer--;
+            if (this.levelUpFlashTimer <= 0) {
+                this.showLevelUpFlash = false;
+            }
+        }
+    }
+
+    getSpawnInterval() {
+        // Spawn rate increases with level
+        return max(20, this.baseSpawnRate - this.currentLevel * 2);
+    }
+
+    showLevelBar() {
+        push();
+
+        // Level number (top center)
+        fill(255, 215, 0);
+        textSize(28);
+        textAlign(CENTER, CENTER);
+
+        if (this.bossActive) {
+            text(`LEVEL ${this.currentLevel} - BOSS FIGHT!`, width / 2, 25);
+        } else {
+            text(`LEVEL ${this.currentLevel}`, width / 2, 25);
+        }
+
+        // Progress bar (only show if not boss active)
+        if (!this.bossActive) {
+            let barWidth = 400;
+            let barHeight = 25;
+            let barX = width / 2 - barWidth / 2;
+            let barY = 50;
+
+            // Background
+            fill(30);
+            stroke(255, 215, 0);
+            strokeWeight(2);
+            rect(barX, barY, barWidth, barHeight);
+
+            // Progress fill
+            let progress = this.getLevelProgress();
+            noStroke();
+            fill(255, 215, 0);
+            rect(barX, barY, barWidth * progress, barHeight);
+
+            // Text (kills)
+            fill(0);
+            textSize(16);
+            text(`${this.killsThisLevel} / ${this.getKillsRequired()}`,
+                width / 2, barY + barHeight / 2);
+        }
+
+        // Level up / Boss flash
+        if (this.showLevelUpFlash) {
+            let alpha = map(this.levelUpFlashTimer, 0, 120, 0, 200);
+            fill(255, 215, 0, alpha);
+            rect(0, 0, width, height);
+
+            fill(255, alpha * 2);
+            textSize(64);
+            if (this.bossActive && this.levelUpFlashTimer > 60) {
+                text('BOSS INCOMING!', width / 2, height / 2);
+            } else if (!this.bossActive && this.levelUpFlashTimer < 30) {
+                text('BOSS DEFEATED!', width / 2, height / 2);
+            } else {
+                text('LEVEL UP!', width / 2, height / 2);
+            }
+        }
+
+        pop();
+    }
+
+    reset() {
+        this.currentLevel = 1;
+        this.totalKills = 0;
+        this.killsThisLevel = 0;
+        this.difficultyMultiplier = 1.0;
+        this.showLevelUpFlash = false;
+        this.bossActive = false;
+        this.currentBoss = null;
+    }
+}
