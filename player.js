@@ -1,8 +1,9 @@
-class Player {
+class Player extends Vehicle {
     constructor(x, y) {
-        this.pos = createVector(x, y);
+        super(x, y);
         this.r = 20;
         this.baseSpeed = 10;
+        this.maxSpeed = 10; // Sync with baseSpeed
         this.maxHealth = 100;
         this.health = this.maxHealth;
         this.isAlive = true;
@@ -24,6 +25,8 @@ class Player {
         switch (type) {
             case 'speed':
                 this.speedBonus += value;
+                // Update max speed
+                this.maxSpeed = this.baseSpeed + this.speedBonus;
                 break;
             case 'firerate':
                 this.fireRateBonus += value;
@@ -36,33 +39,39 @@ class Player {
 
     update() {
         // Keyboard movement with arrow keys or WASD
+        // Instead of setting pos directly, we set velocity
+        // Vehicle.update() will handle pos.add(vel)
+
         let currentSpeed = this.baseSpeed + this.speedBonus;
-        let vel = createVector(0, 0);
+        // Reset velocity every frame for responsive arcade controls (no drift)
+        this.vel.mult(0);
+        this.acc.mult(0); // Clear forces unless we want some recoil later
 
         // Check arrow keys (or WASD)
         if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // A
-            vel.x = -currentSpeed;
+            this.vel.x = -currentSpeed;
         }
         if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // D
-            vel.x = currentSpeed;
+            this.vel.x = currentSpeed;
         }
         if (keyIsDown(UP_ARROW) || keyIsDown(87)) { // W
-            vel.y = -currentSpeed;
+            this.vel.y = -currentSpeed;
         }
         if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) { // S
-            vel.y = currentSpeed;
+            this.vel.y = currentSpeed;
         }
 
         // Normalize diagonal movement
-        if (vel.mag() > 0) {
-            vel.normalize();
-            vel.mult(currentSpeed);
+        if (this.vel.mag() > 0) {
+            this.vel.normalize();
+            this.vel.mult(currentSpeed);
         }
 
-        // Apply movement
-        this.pos.add(vel);
+        // Apply physics (Vehicle update)
+        // pos += vel
+        super.update();
 
-        // Keep player on screen
+        // Keep player on screen (Constraint layout instead of Vehicle.edges wrapping)
         this.pos.x = constrain(this.pos.x, this.r, width - this.r);
         this.pos.y = constrain(this.pos.y, this.r, height - this.r);
 

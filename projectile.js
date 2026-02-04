@@ -1,9 +1,9 @@
-class Projectile {
+class Projectile extends Vehicle {
     constructor(x, y, direction) {
-        this.pos = createVector(x, y);
+        super(x, y);
         this.vel = direction.copy();
         this.vel.mult(8); // initial projectile speed
-        this.acc = createVector(0, 0);
+
         this.r = 5;
         this.isAlive = true;
 
@@ -13,20 +13,9 @@ class Projectile {
         this.homingEnabled = true;
     }
 
-    // Seek the nearest enemy
-    seek(target) {
-        let desired = p5.Vector.sub(target, this.pos);
-        desired.setMag(this.maxSpeed);
+    // Seek implemented in Vehicle
 
-        let steer = p5.Vector.sub(desired, this.vel);
-        steer.limit(this.maxForce);
-
-        return steer;
-    }
-
-    applyForce(force) {
-        this.acc.add(force);
-    }
+    // ApplyForce implemented in Vehicle
 
     // Find and track nearest enemy (only on screen)
     trackEnemy(enemies) {
@@ -59,13 +48,10 @@ class Projectile {
     }
 
     update() {
-        // Update physics
-        this.vel.add(this.acc);
-        this.vel.limit(this.maxSpeed);
-        this.pos.add(this.vel);
-        this.acc.mult(0); // Reset acceleration
+        // Vehicle update (physics)
+        super.update();
 
-        // Remove if off screen
+        // Remove if off screen (Override behavior: delete instead of wrap or constraint)
         if (this.pos.x < 0 || this.pos.x > width ||
             this.pos.y < 0 || this.pos.y > height) {
             this.isAlive = false;

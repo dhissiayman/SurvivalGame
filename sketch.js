@@ -29,6 +29,7 @@ let gameState = 'menu'; // 'menu', 'playing', 'gameover'
 let score = 0;
 let gameOver = false;
 let spawnTimer = 0;
+let bgLayer; // Cache for static background elements
 
 function preload() {
     // Load enemy sprites
@@ -46,6 +47,7 @@ function preload() {
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
     createSliders();
+    createBackgroundCache(); // Re-create cache on resize
 }
 
 function mousePressed() {
@@ -81,6 +83,8 @@ function startGame() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
+    textFont('Orbitron');
+    createBackgroundCache(); // Create static background cache
 
     // Create player at center
     player = new Player(width / 2, height / 2);
@@ -128,11 +132,18 @@ function createLabel(text, x, y) {
 
 //////////////
 function draw() {
-    background(0);
+    // 1. Draw High-Performance Background
+    drawCyberBackground();
+
+    // 2. Enable NEON GLOW effect... REMOVED FOR PERFORMANCE
+    // drawingContext.shadowBlur = 15;
+    // drawingContext.shadowColor = color(0, 200, 255);
 
     // Show main menu
     if (gameState === 'menu') {
+        // drawingContext.shadowBlur = 20; // Keep slightly for menu if ok, else remove
         showMainMenu();
+        // Reset glow for performance/style if needed, but menu usually looks good with it
         return;
     }
 
@@ -140,9 +151,21 @@ function draw() {
         showGameOver();
         return;
     }
+
+    // Obstacles
+    // drawingContext.shadowBlur = 10;
     obstacles.forEach(o => {
+        // drawingContext.shadowColor = o.color || 'green';
         o.show();
     })
+
+    // Reset Glow for game entities
+    // drawingContext.shadowBlur = 10;
+    // drawingContext.shadowColor = 'rgba(255, 255, 255, 0.5)';
+
+    // Reset Default Glow for game entities
+    // drawingContext.shadowBlur = 10;
+    // drawingContext.shadowColor = 'rgba(255, 255, 255, 0.5)';
 
     // Update level up flash
     stageManager.updateLevelUpFlash();
@@ -270,6 +293,7 @@ function draw() {
     }
 
     // Update and show particles
+    // drawingContext.shadowBlur = 0;
     for (let i = particles.length - 1; i >= 0; i--) {
         let particle = particles[i];
 
@@ -280,6 +304,7 @@ function draw() {
             particles.splice(i, 1);
         }
     }
+    // drawingContext.shadowBlur = 0;
 
     // Update and show power-ups
     for (let i = powerUps.length - 1; i >= 0; i--) {
@@ -363,14 +388,7 @@ function showBorder() {
 function showMainMenu() {
     push();
 
-    // Background gradient effect
-    for (let i = 0; i < height; i += 5) {
-        let inter = map(i, 0, height, 0, 1);
-        let c = lerpColor(color(10, 10, 30), color(0, 0, 0), inter);
-        stroke(c);
-        strokeWeight(5);
-        line(0, i, width, i);
-    }
+    // Background handled by drawCyberBackground()
 
     // Title with glow
     textAlign(CENTER, CENTER);
@@ -528,4 +546,49 @@ function restartGame() {
 
     // Spawn initial enemies
     spawnEnemies(5);
+}
+
+function createBackgroundCache() {
+    bgLayer = createGraphics(width, height);
+    bgLayer.noStroke();
+
+    // Deep dark blue background
+    bgLayer.background(5, 5, 16);
+
+    // Pre-render Vignette
+    let ctx = bgLayer.drawingContext;
+    let gradient = ctx.createRadialGradient(width / 2, height / 2, height / 3, width / 2, height / 2, height);
+    gradient.addColorStop(0, 'rgba(0,0,0,0)'); // Transparent center
+    gradient.addColorStop(1, 'rgba(0,0,0,0.85)'); // Dark edges
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+}
+
+function drawCyberBackground() {
+    // 1. Draw cached static background (fast!)
+    image(bgLayer, 0, 0);
+
+    push();
+    // Grid settings (Dynamic part)
+    stroke(30, 60, 100, 50); // Faint blue lines
+    strokeWeight(1);
+
+    let gridSize = 60;
+
+    // Draw Grid
+    for (let x = 0; x <= width; x += gridSize) {
+        line(x, 0, x, height);
+    }
+    for (let y = 0; y <= height; y += gridSize) {
+        line(0, y, width, y);
+    }
+
+    // Moving Scanline effect
+    let scanY = (frameCount * 2) % height;
+    stroke(0, 255, 255, 30);
+    strokeWeight(2);
+    line(0, scanY, width, scanY);
+
+    pop();
 }

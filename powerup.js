@@ -1,11 +1,16 @@
 // Base PowerUp class
-class PowerUp {
+class PowerUp extends Vehicle {
     constructor(x, y, type) {
-        this.pos = createVector(x, y);
+        super(x, y);
         this.type = type;
         this.r = 12;
         this.isAlive = true;
         this.lifespan = 600; // Disappears after 10 seconds if not collected
+
+        // Physics properties for magnet effect
+        this.maxSpeed = 8; // Fast attraction
+        this.maxForce = 0.5; // Strong pull
+        this.friction = 0.95; // Air resistance
 
         // Floating animation
         this.floatOffset = random(TWO_PI);
@@ -15,6 +20,27 @@ class PowerUp {
     }
 
     update() {
+        // Magnet Effect: Seek player if close
+        if (player && player.isAlive) {
+            let d = p5.Vector.dist(this.pos, player.pos);
+            let magnetRange = 150;
+
+            if (d < magnetRange) {
+                // Stronger pull when closer
+                let force = this.seek(player.pos);
+                // Ramp up force as distance decreases
+                let strength = map(d, 0, magnetRange, 2, 0.5);
+                force.mult(strength);
+                this.applyForce(force);
+            }
+        }
+
+        // Apply physics
+        super.update();
+
+        // Apply friction (drag) so it doesn't float away forever
+        this.vel.mult(this.friction);
+
         this.lifespan--;
         if (this.lifespan <= 0) {
             this.isAlive = false;
