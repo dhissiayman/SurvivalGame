@@ -6,6 +6,7 @@ let skeltonBossSprite;
 let boss2Sprite;
 let boss3Sprite;
 let boss4Sprite;
+let playerSprite;
 
 // Game objects
 let player;
@@ -41,7 +42,11 @@ function preload() {
     skeltonBossSprite = loadImage('assets/skelton_boss.png');
     boss2Sprite = loadImage('assets/boss2.png');
     boss3Sprite = loadImage('assets/boss3.png');
+    boss3Sprite = loadImage('assets/boss3.png');
     boss4Sprite = loadImage('assets/boss4.png');
+
+    // Load player sprite
+    playerSprite = loadImage('assets/player.png');
 }
 
 function windowResized() {

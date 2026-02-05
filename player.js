@@ -144,53 +144,26 @@ class Player extends Vehicle {
             circle(0, 0, shieldSize);
         }
 
-        // Pixel art character (20x20 pixels)
-        let pixelSize = 2;
-        noStroke();
+        // Draw Player Sprite
+        if (playerSprite) {
+            imageMode(CENTER);
+            // Draw slightly larger than hit circle for visual appeal
+            let displaySize = this.r * 2.5;
 
-        // Walking animation
-        let walkCycle = floor(frameCount / 10) % 2;
-
-        // Head (4x4 pixels at top)
-        fill(255, 220, 180); // Skin color
-        rect(-4 * pixelSize, -8 * pixelSize, 8 * pixelSize, 4 * pixelSize);
-
-        // Eyes
-        fill(0);
-        rect(-3 * pixelSize, -7 * pixelSize, 2 * pixelSize, 2 * pixelSize);
-        rect(1 * pixelSize, -7 * pixelSize, 2 * pixelSize, 2 * pixelSize);
-
-        // Hair
-        fill(139, 69, 19); // Brown
-        rect(-5 * pixelSize, -10 * pixelSize, 10 * pixelSize, 2 * pixelSize);
-
-        // Body (8x6 pixels)
-        fill(0, 200, 0); // Green shirt
-        rect(-4 * pixelSize, -4 * pixelSize, 8 * pixelSize, 6 * pixelSize);
-
-        // Arms
-        fill(255, 220, 180); // Skin
-        // Left arm
-        rect(-6 * pixelSize, -3 * pixelSize, 2 * pixelSize, 5 * pixelSize);
-        // Right arm
-        rect(4 * pixelSize, -3 * pixelSize, 2 * pixelSize, 5 * pixelSize);
-
-        // Legs (with walking animation)
-        fill(0, 0, 139); // Blue pants
-        if (walkCycle === 0) {
-            // Left leg forward
-            rect(-4 * pixelSize, 2 * pixelSize, 3 * pixelSize, 6 * pixelSize);
-            rect(1 * pixelSize, 2 * pixelSize, 3 * pixelSize, 6 * pixelSize);
+            // Flip sprite if moving left
+            if (this.vel.x < 0) {
+                push();
+                scale(-1, 1);
+                image(playerSprite, 0, 0, displaySize, displaySize);
+                pop();
+            } else {
+                image(playerSprite, 0, 0, displaySize, displaySize);
+            }
         } else {
-            // Right leg forward
-            rect(-3 * pixelSize, 2 * pixelSize, 3 * pixelSize, 6 * pixelSize);
-            rect(0 * pixelSize, 2 * pixelSize, 3 * pixelSize, 6 * pixelSize);
+            // Fallback if sprite not loaded (debug)
+            fill(0, 255, 0);
+            circle(0, 0, this.r * 2);
         }
-
-        // Feet
-        fill(139, 69, 19); // Brown shoes
-        rect(-4 * pixelSize, 8 * pixelSize, 3 * pixelSize, 2 * pixelSize);
-        rect(1 * pixelSize, 8 * pixelSize, 3 * pixelSize, 2 * pixelSize);
 
         // Draw health bar above character (modern design)
         let barWidth = 60;
