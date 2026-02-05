@@ -7,6 +7,7 @@ let boss2Sprite;
 let boss3Sprite;
 let boss4Sprite;
 let playerSprite;
+let wallSprite;
 
 // Game objects
 let player;
@@ -47,6 +48,9 @@ function preload() {
 
     // Load player sprite
     playerSprite = loadImage('assets/player.png');
+
+    // Load wall sprite
+    wallSprite = loadImage('assets/wall.png');
 }
 
 function windowResized() {
@@ -69,16 +73,6 @@ function mousePressed() {
             startGame();
         }
     }
-    if (gameState === 'playing' && !gameOver) {
-        obstacles.push(
-            new Obstacle(
-                mouseX,
-                mouseY,
-                random(20, 100),
-                "green"
-            )
-        );
-    }
 }
 
 function startGame() {
@@ -97,7 +91,6 @@ function setup() {
     // Create stage manager
     stageManager = new StageManager();
 
-    obstacles.push(new Obstacle(width / 2, height / 2, 100, "green"));
     // Create UI sliders
     createSliders();
 
@@ -157,16 +150,24 @@ function draw() {
         return;
     }
 
-    // Obstacles
+    // Obstacles (Walls)
     // drawingContext.shadowBlur = 10;
-    obstacles.forEach(o => {
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        let o = obstacles[i];
+
+        // Update physics/lifespan if method exists (Walls)
+        if (o.update) {
+            o.update();
+        }
+
         // drawingContext.shadowColor = o.color || 'green';
         o.show();
-    })
 
-    // Reset Glow for game entities
-    // drawingContext.shadowBlur = 10;
-    // drawingContext.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        // Remove dead obstacles (Walls)
+        if (o.isAlive === false) {
+            obstacles.splice(i, 1);
+        }
+    }
 
     // Reset Default Glow for game entities
     // drawingContext.shadowBlur = 10;
@@ -264,6 +265,16 @@ function draw() {
             projectiles.splice(i, 1);
             continue;
         }
+
+        // Check collision with enemies (AND WALLS?)
+        // Projectiles should probably hit walls? 
+        // User didn't specify. Assuming walls block enemies. 
+        // If projectiles hit walls, they disappear.
+        // Let's keep it simple for now (Projectiles pass through Walls? Or hit them?)
+        // Standard game logic: Projectiles hit obstacles.
+        // But let's verify what 'enemies' collision loop does.
+
+        // ... (no changes to projectile logic requested, sticking to existing flow)
 
         // Check collision with enemies
         for (let j = enemies.length - 1; j >= 0; j--) {
@@ -377,7 +388,8 @@ function showControls() {
     text('Move: Arrow Keys / WASD', width - 20, height - 80);
     text('Aim: Mouse', width - 20, height - 60);
     text('Shoot: SPACE', width - 20, height - 40);
-    text('Restart: R', width - 20, height - 20);
+    text('Spawn Wall: E', width - 20, height - 20);
+    text('Restart: R', width - 20, height - 0); // Adjusted Y
     pop();
 }
 
@@ -526,12 +538,18 @@ function keyPressed() {
         player.shoot(projectiles);
     }
 
+    // Spawn Wall on E
+    if ((key === 'e' || key === 'E') && !gameOver) {
+        player.spawnWall(obstacles);
+    }
+
     // Restart on R
     if (key === 'r' || key === 'R') {
         restartGame();
     }
     if (key === 'd' || key === 'D') {
-        Enemy.debug = !Enemy.debug;
+        Vehicle.debug = !Vehicle.debug;
+        // console.log("Debug mode:", Vehicle.debug);
     }
 }
 

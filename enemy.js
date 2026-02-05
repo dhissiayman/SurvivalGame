@@ -1,5 +1,5 @@
 class Enemy extends Vehicle {
-    static debug = false;
+    // static debug inherited from Vehicle
     constructor(x, y) {
         super(x, y);
         this.maxSpeed = 2;
@@ -98,11 +98,5 @@ class Enemy extends Vehicle {
         pop();
     }
 
-    drawVector(pos, v, color) {
-        push();
-        strokeWeight(3);
-        stroke(color);
-        line(pos.x, pos.y, pos.x + v.x, pos.y + v.y);
-        pop();
-    }
+    // drawVector inherited from Vehicle
 }

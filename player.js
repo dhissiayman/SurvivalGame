@@ -19,6 +19,10 @@ class Player extends Vehicle {
         this.shotBonus = 0;
         this.hasShield = false;
         this.shieldCount = 0;
+
+        // Wall spawn ability
+        this.wallCooldown = 0;
+        this.wallMaxCooldown = 360; // 6 seconds (60fps)
     }
 
     applyPermanentPowerUp(type, value) {
@@ -34,6 +38,27 @@ class Player extends Vehicle {
             case 'multishot':
                 this.shotBonus += value;
                 break;
+            case 'wander':
+                // Handled in behavior logic
+                break;
+        }
+    }
+
+    spawnWall(obstacles) {
+        if (this.wallCooldown <= 0) {
+            // Direction based on mouse (where player is looking)
+            let dir = createVector(mouseX - this.pos.x, mouseY - this.pos.y);
+            dir.normalize();
+
+            // Spawn distance in front of player
+            let spawnDist = 60;
+            let spawnPos = p5.Vector.add(this.pos, p5.Vector.mult(dir, spawnDist));
+
+            // Create Wall
+            obstacles.push(new Wall(spawnPos.x, spawnPos.y));
+
+            // Start cooldown
+            this.wallCooldown = this.wallMaxCooldown;
         }
     }
 
@@ -75,9 +100,12 @@ class Player extends Vehicle {
         this.pos.x = constrain(this.pos.x, this.r, width - this.r);
         this.pos.y = constrain(this.pos.y, this.r, height - this.r);
 
-        // Update cooldown
+        // Update cooldowns
         if (this.shootCooldown > 0) {
             this.shootCooldown--;
+        }
+        if (this.wallCooldown > 0) {
+            this.wallCooldown--;
         }
     }
 
@@ -228,6 +256,13 @@ class Player extends Vehicle {
         // Power-up bonuses (PERMANENT!)
         textSize(14);
         let yOffset = 0;
+
+        // Wall Ability Status
+        let wallStatus = this.wallCooldown <= 0 ? "READY [E]" : `COOLDOWN (${ceil(this.wallCooldown / 60)}s)`;
+        let wallColor = this.wallCooldown <= 0 ? color(0, 255, 0) : color(255, 0, 0);
+        fill(wallColor);
+        text(`WALL: ${wallStatus}`, 20, height - 60 - yOffset);
+        yOffset += 20;
 
         if (this.speedBonus > 0) {
             fill(0, 255, 255);
