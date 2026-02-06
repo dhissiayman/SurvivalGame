@@ -100,7 +100,19 @@ function setup() {
     spawnEnemies(5);
 
     // Initialize Background Flock
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 30; i++) { // Reduced from 50 for performance
+        backgroundFlock.push(new Boid(random(width), random(height)));
+    }
+}
+
+function createSliders() {
+    // ...
+}
+
+function restartGame() {
+    // ...
+    // Re-Initialize Background Flock
+    for (let i = 0; i < 30; i++) { // Reduced from 50
         backgroundFlock.push(new Boid(random(width), random(height)));
     }
 }
@@ -183,6 +195,16 @@ function draw() {
     // Update level up flash
     stageManager.updateLevelUpFlash();
 
+    // Update StageManager (timers for hordes)
+    stageManager.update();
+
+    // Check for Horde Trigger
+    if (stageManager.checkHordeTriggered()) {
+        let horde = stageManager.spawnBatHorde();
+        enemies.push(...horde);
+        // console.log("Horde spawned!", horde.length);
+    }
+
     // Update and show player
     player.update();
     player.show();
@@ -214,7 +236,7 @@ function draw() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let enemy = enemies[i];
 
-        enemy.applyBehaviors(player.pos, wanderInfluenceSlider.value());
+        enemy.applyBehaviors(player.pos, wanderInfluenceSlider.value(), enemies);
         enemy.update();
         enemy.edges();
         enemy.show();
@@ -228,6 +250,12 @@ function draw() {
             if (!player.isAlive) {
                 gameOver = true;
             }
+            continue; // Skip the rest if enemy collided
+        }
+
+        // Remove dead enemies (e.g. FlockingEnemy that left screen)
+        if (!enemy.isAlive) {
+            enemies.splice(i, 1);
         }
     }
 
@@ -372,8 +400,15 @@ function maintainEnemyCount() {
 
 function spawnEnemies(count) {
     for (let i = 0; i < count; i++) {
-        let enemy = stageManager.spawnEnemy();
-        enemies.push(enemy);
+        let result = stageManager.spawnEnemy();
+
+        if (Array.isArray(result)) {
+            // It's a horde! Add them all.
+            enemies.push(...result);
+        } else {
+            // It's a single enemy
+            enemies.push(result);
+        }
     }
 }
 

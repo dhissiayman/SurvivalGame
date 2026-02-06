@@ -11,6 +11,7 @@ class Projectile extends Vehicle {
         this.maxSpeed = 10;
         this.maxForce = 0.3;
         this.homingEnabled = true;
+        this.health=10;
     }
 
     // Seek implemented in Vehicle

@@ -14,17 +14,83 @@ class StageManager {
         this.baseEnemySpeed = 2;
         this.baseSpawnRate = 60;
         this.difficultyMultiplier = 1.0;
+
+        // Horde System
+        this.hordeTimer = 0;
+        this.nextHordeTime = 600; // First horde after 10 seconds
+        this.hordeTriggered = false;
+        this.hordeTriggeredFlash = 0;
     }
 
     getEnemyTypes() {
         // Unlock more enemy types as player progresses
+        // Removed FlockingEnemy from here - they are now special events
+        let types = [Enemy];
+
         if (this.currentLevel >= 10) {
-            return [Enemy, TankEnemy, SplitterEnemy];
+            types.push(TankEnemy, SplitterEnemy);
         } else if (this.currentLevel >= 5) {
-            return [Enemy, TankEnemy];
-        } else {
-            return [Enemy];
+            types.push(TankEnemy);
         }
+
+        return types;
+    }
+
+    update() {
+        // Manage periodic events like Hordes
+        if (!this.bossActive) {
+            this.hordeTimer++;
+            if (this.hordeTimer >= this.nextHordeTime) {
+                this.triggerHorde();
+                this.hordeTimer = 0;
+                this.nextHordeTime = random(600, 1200); // Random interval 10-20 seconds
+            }
+        }
+
+        this.updateLevelUpFlash();
+    }
+
+    triggerHorde() {
+        this.hordeTriggered = true;
+        // Silent spawn - no visual warning requested
+    }
+
+    checkHordeTriggered() {
+        if (this.hordeTriggered) {
+            this.hordeTriggered = false;
+            return true;
+        }
+        return false;
+    }
+
+    spawnBatHorde() {
+        // Called by sketch when a horde triggers
+        let hordeSize = floor(random(7, 12)); // Reduced from 15-25 for performance
+        let horde = [];
+
+        // Pick a random side for the WHOLE horde to enter from
+        let edge = floor(random(4));
+        let startX, startY;
+
+        for (let i = 0; i < hordeSize; i++) {
+            // Scatter them around a center point off-screen
+            switch (edge) {
+                case 0: startX = random(width); startY = -50 - random(100); break;
+                case 1: startX = width + 50 + random(100); startY = random(height); break;
+                case 2: startX = random(width); startY = height + 50 + random(100); break;
+                case 3: startX = -50 - random(100); startY = random(height); break;
+            }
+
+            let enemy = new FlockingEnemy(startX, startY);
+
+            // Aim them roughly towards center so they cross the screen
+            let center = createVector(width / 2, height / 2);
+            let dir = p5.Vector.sub(center, createVector(startX, startY));
+            enemy.vel = dir.copy().normalize().mult(enemy.maxSpeed);
+
+            horde.push(enemy);
+        }
+        return horde;
     }
 
     spawnEnemy() {
@@ -42,6 +108,7 @@ class StageManager {
         // Select random enemy type for this level
         let enemyTypes = this.getEnemyTypes();
         let EnemyClass = random(enemyTypes);
+
         let enemy = new EnemyClass(x, y);
 
         // Scale enemy difficulty
@@ -123,6 +190,7 @@ class StageManager {
     updateLevelUpFlash() {
         if (this.showLevelUpFlash) {
             this.levelUpFlashTimer--;
+
             if (this.levelUpFlashTimer <= 0) {
                 this.showLevelUpFlash = false;
             }
@@ -202,5 +270,6 @@ class StageManager {
         this.showLevelUpFlash = false;
         this.bossActive = false;
         this.currentBoss = null;
+        this.hordeTimer = 0;
     }
 }
