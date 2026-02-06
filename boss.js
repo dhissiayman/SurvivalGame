@@ -57,13 +57,7 @@ class Boss1 extends Boss {
     }
 
     show() {
-        push();
-
-        // Draw skelton boss sprite
-        imageMode(CENTER);
-        image(skeltonBossSprite, this.pos.x, this.pos.y, this.r * 4, this.r * 4);
-
-        pop();
+        this.drawSprite(skeltonBossSprite, this.r * 4, this.r * 4);
         this.showHealthBar();
     }
 }
@@ -81,13 +75,7 @@ class Boss2 extends Boss {
     }
 
     show() {
-        push();
-
-        // Draw boss2 sprite
-        imageMode(CENTER);
-        image(boss2Sprite, this.pos.x, this.pos.y, this.r * 4, this.r * 4);
-
-        pop();
+        this.drawSprite(boss2Sprite, this.r * 4, this.r * 4);
         this.showHealthBar();
     }
 }
@@ -129,13 +117,7 @@ class Boss3 extends Boss {
     }
 
     show() {
-        push();
-
-        // Draw boss3 sprite
-        imageMode(CENTER);
-        image(boss3Sprite, this.pos.x, this.pos.y, this.r * 4, this.r * 4);
-
-        pop();
+        this.drawSprite(boss3Sprite, this.r * 4, this.r * 4);
         this.showHealthBar();
     }
 }

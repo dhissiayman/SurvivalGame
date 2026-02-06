@@ -90,4 +90,21 @@ class Enemy extends Vehicle {
     }
 
     // drawVector inherited from Vehicle
+
+    // Helper for rendering sprites
+    drawSprite(sprite, w, h) {
+        if (!w) w = this.r * 6;
+        if (!h) h = this.r * 6;
+
+        push();
+        imageMode(CENTER);
+        image(sprite, this.pos.x, this.pos.y, w, h);
+
+        if (Vehicle.debug) {
+            noFill();
+            stroke(0, 255, 0);
+            circle(this.pos.x, this.pos.y, this.r * 2);
+        }
+        pop();
+    }
 }

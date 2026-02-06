@@ -529,38 +529,87 @@ class Vehicle {
 
     // Comportement Separation : on garde ses distances par rapport aux voisins
     // ON ETUDIERA CE COMPORTEMENT PLUS TARD !
-    separate(boids) {
-        let desiredseparation = this.r;
-        let steer = createVector(0, 0, 0);
-        let count = 0;
-        // On examine les autres boids pour voir s'ils sont trop près
-        for (let i = 0; i < boids.length; i++) {
-            let other = boids[i];
-            let d = p5.Vector.dist(this.pos, other.pos);
-            // Si la distance est supérieure à 0 et inférieure à une valeur arbitraire (0 quand on est soi-même)
-            if (d > 0 && d < desiredseparation) {
-                // Calculate vector pointing away from neighbor
-                let diff = p5.Vector.sub(this.pos, other.pos);
-                diff.normalize();
-                diff.div(d); // poids en fonction de la distance. Plus le voisin est proche, plus le poids est grand
-                steer.add(diff);
-                count++; // On compte le nombre de voisins
+    // =========================
+    // FLOCKING BEHAVIORS (Standardized)
+    // =========================
+    flock(boids) {
+        let alignment = this.align(boids);
+        let cohesion = this.cohesion(boids);
+        let separation = this.separation(boids);
+
+        alignment.mult(this.alignWeight || 1.0);
+        cohesion.mult(this.cohesionWeight || 1.0);
+        separation.mult(this.separationWeight || 1.5);
+
+        this.applyForce(alignment);
+        this.applyForce(cohesion);
+        this.applyForce(separation);
+    }
+
+    align(boids) {
+        let steering = createVector();
+        let total = 0;
+        let perception = this.perceptionRadius || 50;
+
+        for (let other of boids) {
+            let d = dist(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
+            if (other != this && d < perception) {
+                steering.add(other.vel);
+                total++;
             }
         }
-        // On moyenne le vecteur steer en fonction du nombre de voisins
-        if (count > 0) {
-            steer.div(count);
+        if (total > 0) {
+            steering.div(total);
+            steering.setMag(this.maxSpeed);
+            steering.sub(this.vel);
+            steering.limit(this.maxForce);
         }
+        return steering;
+    }
 
-        // si la force de répulsion est supérieure à 0
-        if (steer.mag() > 0) {
-            // On implemente : Steering = Desired - Velocity
-            steer.normalize();
-            steer.mult(this.maxspeed);
-            steer.sub(this.velocity);
-            steer.limit(this.maxforce);
+    cohesion(boids) {
+        let steering = createVector();
+        let total = 0;
+        let perception = this.perceptionRadius || 50;
+
+        for (let other of boids) {
+            let d = dist(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
+            if (other != this && d < perception) {
+                steering.add(other.pos);
+                total++;
+            }
         }
-        return steer;
+        if (total > 0) {
+            steering.div(total);
+            steering.sub(this.pos);
+            steering.setMag(this.maxSpeed);
+            steering.sub(this.vel);
+            steering.limit(this.maxForce);
+        }
+        return steering;
+    }
+
+    separation(boids) {
+        let steering = createVector();
+        let total = 0;
+        let perception = this.perceptionRadius || 50;
+
+        for (let other of boids) {
+            let d = dist(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
+            if (other != this && d < perception / 2) {
+                let diff = p5.Vector.sub(this.pos, other.pos);
+                diff.div(d * d); // Weight by distance squared
+                steering.add(diff);
+                total++;
+            }
+        }
+        if (total > 0) {
+            steering.div(total);
+            steering.setMag(this.maxSpeed);
+            steering.sub(this.vel);
+            steering.limit(this.maxForce);
+        }
+        return steering;
     }
 
     // applyForce est une méthode qui permet d'appliquer une force au véhicule
