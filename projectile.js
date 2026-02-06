@@ -11,17 +11,27 @@ class Projectile extends Vehicle {
         this.maxSpeed = 10;
         this.maxForce = 0.3;
         this.homingEnabled = true;
-        this.health=10;
+        this.health = 10;
     }
 
     // Seek implemented in Vehicle
 
     // ApplyForce implemented in Vehicle
 
-    // Find and track nearest enemy (only on screen)
-    trackEnemy(enemies) {
+    // Seek implemented in Vehicle
+
+    // ApplyForce implemented in Vehicle
+
+    // Apply behaviors: Homing (Seek) and Separation
+    applyBehaviors(projectiles, enemies) {
         if (!this.homingEnabled) return;
 
+        // 1. Separation from other projectiles (User requested force 0.1)
+        let separation = this.separation(projectiles);
+        separation.mult(0.1);
+        this.applyForce(separation);
+
+        // 2. Homing (Track nearest enemy)
         // Find nearest target that is ON SCREEN
         let nearest = null;
         let minDist = Infinity;

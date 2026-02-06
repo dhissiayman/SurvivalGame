@@ -268,7 +268,9 @@ function draw() {
         if (stageManager.bossActive && stageManager.currentBoss) {
             targets.push(stageManager.currentBoss);
         }
-        projectile.trackEnemy(targets);
+
+        // Apply behaviors (Separation + Homing)
+        projectile.applyBehaviors(projectiles, targets);
 
         projectile.update();
         projectile.show();
