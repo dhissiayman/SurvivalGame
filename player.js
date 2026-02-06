@@ -23,6 +23,13 @@ class Player extends Vehicle {
         // Wall spawn ability
         this.wallCooldown = 0;
         this.wallMaxCooldown = 360; // 6 seconds (60fps)
+
+        // Steering configuration for player
+        this.maxForce = 1.5; // High max force for responsive controls
+        this.friction = 0.1; // To stop when no keys pressed
+
+        // Limit number of projectiles to avoid clutter
+        this.maxProjectilesOnScreen = 30;
     }
 
     applyPermanentPowerUp(type, value) {
@@ -63,42 +70,56 @@ class Player extends Vehicle {
     }
 
     update() {
-        // Keyboard movement with arrow keys or WASD
-        // Instead of setting pos directly, we set velocity
-        // Vehicle.update() will handle pos.add(vel)
-
+        // Keyboard movement - Force based (Steering Behavior)
+        // Desired velocity based on input
         let currentSpeed = this.baseSpeed + this.speedBonus;
-        // Reset velocity every frame for responsive arcade controls (no drift)
-        this.vel.mult(0);
-        this.acc.mult(0); // Clear forces unless we want some recoil later
+        let input = createVector(0, 0);
 
-        // Check arrow keys (or WASD)
         if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // A
-            this.vel.x = -currentSpeed;
+            input.x = -1;
         }
         if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // D
-            this.vel.x = currentSpeed;
+            input.x = 1;
         }
         if (keyIsDown(UP_ARROW) || keyIsDown(87)) { // W
-            this.vel.y = -currentSpeed;
+            input.y = -1;
         }
         if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) { // S
-            this.vel.y = currentSpeed;
+            input.y = 1;
         }
 
-        // Normalize diagonal movement
-        if (this.vel.mag() > 0) {
-            this.vel.normalize();
-            this.vel.mult(currentSpeed);
+        // Normalize input to get direction and apply speed
+        if (input.mag() > 0) {
+            input.normalize();
+            input.mult(currentSpeed); // This is our DESIRED velocity
+
+            // Reynolds Steering Formula: Steer = Desired - Velocity
+            let steer = p5.Vector.sub(input, this.vel);
+            steer.limit(this.maxForce);
+            this.applyForce(steer);
+        } else {
+            // Braking force (Friction) when no input
+            let brake = this.vel.copy();
+            brake.normalize();
+            brake.mult(-1); // Opposite to velocity
+            brake.setMag(this.maxForce); // Brake with max force
+
+            // Limit braking to not overshoot 0 (simple damping)
+            if (this.vel.mag() < this.maxForce) {
+                this.vel.mult(0);
+            } else {
+                this.applyForce(brake);
+            }
         }
 
-        // Apply physics (Vehicle update)
-        // pos += vel
+        // Apply boundary force instead of hard constrain
+        // boundaries(bx, by, bw, bh, d)
+        let boundaryForce = this.boundaries(0, 0, width, height, 40);
+        boundaryForce.mult(2); // Stronger boundary force for player
+        this.applyForce(boundaryForce);
+
+        // Physics update (Vehicle)
         super.update();
-
-        // Keep player on screen (Constraint layout instead of Vehicle.edges wrapping)
-        this.pos.x = constrain(this.pos.x, this.r, width - this.r);
-        this.pos.y = constrain(this.pos.y, this.r, height - this.r);
 
         // Update cooldowns
         if (this.shootCooldown > 0) {
@@ -110,6 +131,11 @@ class Player extends Vehicle {
     }
 
     shoot(projectiles) {
+        // Check limit
+        if (projectiles.length >= this.maxProjectilesOnScreen) {
+            return;
+        }
+
         let shootDelay = max(3, this.baseShootDelay - this.fireRateBonus); // Min 3 frames
 
         if (this.shootCooldown <= 0) {
@@ -244,18 +270,45 @@ class Player extends Vehicle {
         pop();
     }
 
-    showUI() {
+    showUI(projectileCount = 0) {
         push();
 
-        // Health text
-        fill(255);
-        textSize(20);
-        textAlign(LEFT);
-        text(`Health: ${this.health}`, 20, height - 30);
+
 
         // Power-up bonuses (PERMANENT!)
         textSize(14);
         let yOffset = 0;
+
+        // AMMO BAR (Projectiles)
+        // Show remaining capacity
+        let currentAmmo = max(0, this.maxProjectilesOnScreen - projectileCount);
+        let maxAmmo = this.maxProjectilesOnScreen;
+        let ammoRatio = currentAmmo / maxAmmo;
+
+        let barW = 150;
+        let barH = 10;
+        let barX = 20;
+        let barY = height - 90; // Position above other UI elements
+
+        // Label
+        fill(255);
+        noStroke();
+        text(`MISSILES: ${currentAmmo}/${maxAmmo}`, barX, barY - 5);
+
+        // Background bar
+        fill(50);
+        stroke(100);
+        rect(barX, barY, barW, barH);
+
+        // Fill bar
+        noStroke();
+        if (ammoRatio > 0.5) fill(0, 255, 255); // Cyan
+        else if (ammoRatio > 0.2) fill(255, 200, 0); // Warning
+        else fill(255, 50, 50); // Critical
+
+        rect(barX, barY, barW * ammoRatio, barH);
+
+        yOffset += 70; // Shift other elements up significantly to clear the Ammo Bar
 
         // Wall Ability Status
         let wallStatus = this.wallCooldown <= 0 ? "READY [E]" : `COOLDOWN (${ceil(this.wallCooldown / 60)}s)`;

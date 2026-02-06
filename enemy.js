@@ -52,16 +52,7 @@ class Enemy extends Vehicle {
     // Vehicle.avoid is generic. Enemy.avoid is specific.
     // I will COMMENT OUT existing physics methods to rely on Parent.
 
-    avoid(obstacles) {
-        // We can use super.avoid(obstacles) if it works well.
-        // Let's try to use the Vehicle implementation which I wrote to be similar!
-        // But the Vehicle one doesn't have the debug drawing.
 
-        // Let's stick to the plan: remove duplicates.
-        // I will rely on Vehicle methods.
-        // If debug is needed, I should add it to Vehicle or override show/update.
-        return super.avoid(obstacles);
-    }
 
     // =========================
     // COLLISION
@@ -86,7 +77,7 @@ class Enemy extends Vehicle {
         imageMode(CENTER);
         image(batSprite, this.pos.x, this.pos.y, this.r * 6, this.r * 6);
 
-        if (Enemy.debug) {
+        if (Vehicle.debug) {
             // Debug drawings
             noFill();
             stroke(0, 255, 0);

@@ -68,22 +68,23 @@ class Projectile extends Vehicle {
 
     show() {
         push();
+        translate(this.pos.x, this.pos.y);
+        rotate(this.vel.heading());
 
-        fill(255);
+        // Neon Glow Effect (simulated with layers for performance or shadowBlur if small count)
+        // Since projectiles are few, shadowBlur might be okay, but let's use layers for safety
+        // Core
         noStroke();
-        circle(this.pos.x, this.pos.y, this.r * 2);
+        fill(200, 255, 255); // White-cyan core
+        ellipse(0, 0, this.r * 4, this.r * 1.5);
 
-        // Trail effect
-        fill(255, 150);
-        circle(this.pos.x - this.vel.x * 0.1, this.pos.y - this.vel.y * 0.1, this.r * 1.5);
+        // Outer Glow
+        fill(0, 255, 255, 100);
+        ellipse(0, 0, this.r * 6, this.r * 3);
 
-        // Draw velocity vector (direction indicator)
-        if (this.vel.mag() > 0) {
-            stroke(255, 100);
-            strokeWeight(2);
-            let vel = this.vel.copy().normalize().mult(10);
-            line(this.pos.x, this.pos.y, this.pos.x + vel.x, this.pos.y + vel.y);
-        }
+        // Trail/Engine flare
+        fill(0, 100, 255, 150);
+        triangle(-this.r * 2, -this.r, -this.r * 2, this.r, -this.r * 6, 0);
 
         pop();
     }

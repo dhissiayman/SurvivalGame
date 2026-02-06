@@ -179,7 +179,7 @@ function draw() {
     // Update and show player
     player.update();
     player.show();
-    player.showUI();
+    player.showUI(projectiles.length);
 
     // Spawn enemies continuously (unless boss active)
     if (!stageManager.bossActive) {
@@ -341,7 +341,7 @@ function draw() {
     }
 
     // Show UI
-    showScore();
+
     stageManager.showLevelBar(); // Show level progress bar at top
     showControls();
     showBorder(); // Draw border around game area
@@ -370,15 +370,7 @@ function spawnEnemies(count) {
     }
 }
 
-function showScore() {
-    push();
-    fill(255);
-    textSize(20);
-    textAlign(LEFT);
-    text(`Score: ${score}`, 20, height - 60);
-    text(`Enemies: ${enemies.length}`, 20, height - 90);
-    pop();
-}
+
 
 function showControls() {
     push();
