@@ -19,8 +19,10 @@ let obstacles = [];
 let backgroundFlock = [];
 
 // Systems
+// Systems
 let stageManager;
-let battleTheme;
+let battleTheme; // Restore global variable for local access
+// window.battleTheme is synced for external access
 
 // UI Sliders
 let enemyCountSlider;
@@ -80,6 +82,12 @@ function mousePressed() {
 function startGame() {
     gameState = 'playing';
     // Game already initialized in setup()
+
+    // Start music (user interaction content allows playback)
+    if (window.battleTheme) {
+        window.battleTheme.currentTime = 0;
+        window.battleTheme.play().catch(e => console.log("Start audio failed:", e));
+    }
 }
 
 function setup() {
@@ -107,8 +115,12 @@ function setup() {
 
     // Music
     battleTheme = new Audio('assets/audio/final-fantasy-vii-fighting-(battle-theme)-(hq)-made-with-Voicemod.mp3');
-    battleTheme.volume = 0.4;
+    battleTheme.volume = 0.25;
     battleTheme.loop = true;
+
+    // Sync to window for StageManager access
+    window.battleTheme = battleTheme;
+
     battleTheme.play().catch(e => console.log("Audio play failed (user interaction needed):", e));
 }
 
@@ -606,6 +618,12 @@ function restartGame() {
     // Re-Initialize Background Flock
     for (let i = 0; i < 50; i++) {
         backgroundFlock.push(new Boid(random(width), random(height)));
+    }
+
+    // Restart Music
+    if (window.battleTheme) {
+        window.battleTheme.currentTime = 0;
+        window.battleTheme.play().catch(e => console.log("Restart audio failed:", e));
     }
 }
 

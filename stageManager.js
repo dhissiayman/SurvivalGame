@@ -21,7 +21,11 @@ class StageManager {
         this.hordeTriggered = false;
         // Audio
         this.levelUpSound = new Audio('assets/audio/final-fantasy-vii-victory-fanfare-1.mp3');
-        this.levelUpSound.volume = 0.5; // Adjust volume if needed
+        this.levelUpSound.volume = 0.6; // Louder for victory event
+
+        this.bossMusic = new Audio('assets/audio/Final_Fantasy_Final_Boss_Music_-_Final_Fantasy_X_Jecht_KLICKAUD.mp3');
+        this.bossMusic.volume = 0.5;
+        this.bossMusic.loop = true;
     }
 
     getEnemyTypes() {
@@ -138,6 +142,15 @@ class StageManager {
 
         this.bossActive = true;
 
+        // Switch music to Boss Theme
+        if (typeof window.battleTheme !== 'undefined' && window.battleTheme) {
+            window.battleTheme.pause();
+        }
+        if (this.bossMusic) {
+            this.bossMusic.currentTime = 0;
+            this.bossMusic.play().catch(e => console.log("Boss music failed:", e));
+        }
+
         // Boss announcement flash
         this.showLevelUpFlash = true;
         this.levelUpFlashTimer = 120; // 2 seconds
@@ -147,8 +160,9 @@ class StageManager {
         this.killsThisLevel++;
         this.totalKills++;
 
-        // Check if level complete
-        if (this.killsThisLevel >= this.getKillsRequired()) {
+        // Check if level complete (BUT ONLY IF NO BOSS ACTIVE)
+        // If boss is active, level up happens when boss dies (onBossDefeated)
+        if (!this.bossActive && this.killsThisLevel >= this.getKillsRequired()) {
             this.levelUp();
         }
     }
@@ -156,6 +170,28 @@ class StageManager {
     onBossDefeated() {
         this.bossActive = false;
         this.currentBoss = null;
+
+        // Stop Boss Theme
+        if (this.bossMusic) {
+            this.bossMusic.pause();
+            this.bossMusic.currentTime = 0;
+        }
+        // Note: Battle theme will resume after levelUp calls (which happens after this? No, wait)
+        // onBossDefeated is called, THEN what? 
+        // In sketch.js: stageManager.onBossDefeated() is called. 
+        // Then loop continues.
+        // We probably need to trigger levelUp() here OR play victory sound here?
+        // Ah, in sketch.js, after onBossDefeated(), nothing calls levelUp().
+        // BUT, usually boss kill = level completed?
+        // Let's check sketch.js logic.
+        // If boss dead -> score++, explosion, powerup, onBossDefeated().
+        // Does onBossDefeated call levelUp? No.
+        // Wait, Boss IS the level. Beating boss SHOULD trigger level UP.
+        // I should call levelUp() inside onBossDefeated() or right after.
+        // Let's look at levelUp(). It increments level.
+        // YES. So beating boss -> Level Up.
+
+        this.levelUp(); // Trigger level up (which plays fanfare + resumes normal theme later)
 
         // Boss defeated flash
         this.showLevelUpFlash = true;
@@ -178,9 +214,13 @@ class StageManager {
 
         // Play victory sound and manage battle theme
         if (this.levelUpSound) {
-            // Pause battle theme
-            if (typeof battleTheme !== 'undefined' && battleTheme) {
-                battleTheme.pause();
+            // STOP ALL OTHER MUSIC
+            if (this.bossMusic) {
+                this.bossMusic.pause();
+                this.bossMusic.currentTime = 0;
+            }
+            if (typeof window.battleTheme !== 'undefined' && window.battleTheme) {
+                window.battleTheme.pause();
             }
 
             this.levelUpSound.currentTime = 0;
@@ -188,8 +228,12 @@ class StageManager {
 
             // Resume battle theme when victory sound ends
             this.levelUpSound.onended = () => {
-                if (typeof battleTheme !== 'undefined' && battleTheme) {
-                    battleTheme.play().catch(e => console.log("Resume theme failed:", e));
+                // Ensure boss music is definitely off
+                if (this.bossMusic) this.bossMusic.pause();
+
+                // Resume Standard Theme
+                if (typeof window.battleTheme !== 'undefined' && window.battleTheme) {
+                    window.battleTheme.play().catch(e => console.log("Resume theme failed:", e));
                 }
             };
         }
@@ -291,5 +335,11 @@ class StageManager {
         this.bossActive = false;
         this.currentBoss = null;
         this.hordeTimer = 0;
+
+        // Reset Audio
+        if (this.bossMusic) {
+            this.bossMusic.pause();
+            this.bossMusic.currentTime = 0;
+        }
     }
 }

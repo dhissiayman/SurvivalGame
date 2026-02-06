@@ -30,6 +30,10 @@ class Player extends Vehicle {
 
         // Limit number of projectiles to avoid clutter
         this.maxProjectilesOnScreen = 30;
+
+        // Audio
+        this.shootSound = new Audio('assets/audio/shoot.m4a');
+        this.shootSound.volume = 0.4; // Adjusted for better mix
     }
 
     applyPermanentPowerUp(type, value) {
@@ -159,6 +163,14 @@ class Player extends Vehicle {
                     let projectile = new Projectile(this.pos.x, this.pos.y, dir);
                     projectiles.push(projectile);
                 }
+            }
+
+            // Play shoot sound
+            if (this.shootSound) {
+                // Use cloneNode to allow overlapping sounds
+                let soundClone = this.shootSound.cloneNode(true);
+                soundClone.volume = this.shootSound.volume;
+                soundClone.play().catch(e => { /* Ignore autoplay errors */ });
             }
 
             this.shootCooldown = shootDelay;
