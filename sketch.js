@@ -16,6 +16,7 @@ let projectiles = [];
 let particles = [];
 let powerUps = [];
 let obstacles = [];
+let backgroundFlock = [];
 
 // Systems
 let stageManager;
@@ -95,7 +96,13 @@ function setup() {
     createSliders();
 
     // Spawn initial enemies
+    // Spawn initial enemies
     spawnEnemies(5);
+
+    // Initialize Background Flock
+    for (let i = 0; i < 50; i++) {
+        backgroundFlock.push(new Boid(random(width), random(height)));
+    }
 }
 
 function createSliders() {
@@ -552,6 +559,7 @@ function restartGame() {
     projectiles = [];
     particles = [];
     powerUps = [];
+    backgroundFlock = []; // Reset background boids
     score = 0;
     gameOver = false;
     spawnTimer = 0;
@@ -560,7 +568,13 @@ function restartGame() {
     stageManager.reset();
 
     // Spawn initial enemies
+    // Spawn initial enemies
     spawnEnemies(5);
+
+    // Re-Initialize Background Flock
+    for (let i = 0; i < 50; i++) {
+        backgroundFlock.push(new Boid(random(width), random(height)));
+    }
 }
 
 function createBackgroundCache() {
@@ -597,6 +611,13 @@ function drawCyberBackground() {
     }
     for (let y = 0; y <= height; y += gridSize) {
         line(0, y, width, y);
+    }
+
+    // Draw Background Boids (Flocking)
+    for (let boid of backgroundFlock) {
+        boid.flock(backgroundFlock); // Calculate behaviors
+        boid.update();
+        boid.show();
     }
 
     // Moving Scanline effect
