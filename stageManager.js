@@ -19,7 +19,9 @@ class StageManager {
         this.hordeTimer = 0;
         this.nextHordeTime = 600; // First horde after 10 seconds
         this.hordeTriggered = false;
-        this.hordeTriggeredFlash = 0;
+        // Audio
+        this.levelUpSound = new Audio('assets/audio/final-fantasy-vii-victory-fanfare-1.mp3');
+        this.levelUpSound.volume = 0.5; // Adjust volume if needed
     }
 
     getEnemyTypes() {
@@ -173,6 +175,24 @@ class StageManager {
     levelUp() {
         this.currentLevel++;
         this.killsThisLevel = 0;
+
+        // Play victory sound and manage battle theme
+        if (this.levelUpSound) {
+            // Pause battle theme
+            if (typeof battleTheme !== 'undefined' && battleTheme) {
+                battleTheme.pause();
+            }
+
+            this.levelUpSound.currentTime = 0;
+            this.levelUpSound.play().catch(e => console.log("Audio play failed:", e));
+
+            // Resume battle theme when victory sound ends
+            this.levelUpSound.onended = () => {
+                if (typeof battleTheme !== 'undefined' && battleTheme) {
+                    battleTheme.play().catch(e => console.log("Resume theme failed:", e));
+                }
+            };
+        }
 
         // Increase difficulty
         this.difficultyMultiplier = 1 + (this.currentLevel - 1) * 0.15;

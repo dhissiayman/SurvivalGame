@@ -20,6 +20,7 @@ let backgroundFlock = [];
 
 // Systems
 let stageManager;
+let battleTheme;
 
 // UI Sliders
 let enemyCountSlider;
@@ -103,18 +104,12 @@ function setup() {
     for (let i = 0; i < 30; i++) { // Reduced from 50 for performance
         backgroundFlock.push(new Boid(random(width), random(height)));
     }
-}
 
-function createSliders() {
-    // ...
-}
-
-function restartGame() {
-    // ...
-    // Re-Initialize Background Flock
-    for (let i = 0; i < 30; i++) { // Reduced from 50
-        backgroundFlock.push(new Boid(random(width), random(height)));
-    }
+    // Music
+    battleTheme = new Audio('assets/audio/final-fantasy-vii-fighting-(battle-theme)-(hq)-made-with-Voicemod.mp3');
+    battleTheme.volume = 0.4;
+    battleTheme.loop = true;
+    battleTheme.play().catch(e => console.log("Audio play failed (user interaction needed):", e));
 }
 
 function createSliders() {
