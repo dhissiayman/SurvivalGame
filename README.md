@@ -1,7 +1,6 @@
 # Survival Game - Rapport de Projet
 
-**Réalisé par :** DHISSI AYMAN et HANNOUNI LINA  
-**Master 2 IA2 - Université Hassan II de Casablanca [À confirmer]**  
+**Réalisé par :** DHISSI AYMAN et HANNOUNI LINA   
 **Année Universitaire :** 2025-2026  
 
 **Lien GitHub Pages (Jeu) :** [https://dhissiayman.github.io/SurvivalGame/](https://dhissiayman.github.io/SurvivalGame/)  
