@@ -28,8 +28,6 @@ let battleTheme; // Restore global variable for local access
 let enemyCountSlider;
 let enemySpeedSlider;
 let enemyForceSlider;
-let wanderInfluenceSlider;
-
 // Game state
 let gameState = 'menu'; // 'menu', 'playing', 'gameover'
 let score = 0;
@@ -136,12 +134,6 @@ function createSliders() {
     enemyCountSlider.style('width', '200px');
     enemyCountSlider.style('accent-color', 'red');
 
-    // Wander influence slider
-    createLabel('Random Walk Influence', sliderX, startY + spacing);
-    wanderInfluenceSlider = createSlider(0, 1, 0.2, 0.05);
-    wanderInfluenceSlider.position(sliderX, startY + spacing + 25);
-    wanderInfluenceSlider.style('width', '200px');
-    wanderInfluenceSlider.style('accent-color', 'red');
 }
 
 function createLabel(text, x, y) {
@@ -226,7 +218,7 @@ function draw() {
     if (stageManager.bossActive && stageManager.currentBoss) {
         let boss = stageManager.currentBoss;
 
-        boss.applyBehaviors(player.pos, wanderInfluenceSlider.value());
+        boss.applyBehaviors(player.pos, 0.2);
         boss.update();
         boss.show();
 
@@ -243,7 +235,7 @@ function draw() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         let enemy = enemies[i];
 
-        enemy.applyBehaviors(player.pos, wanderInfluenceSlider.value(), enemies);
+        enemy.applyBehaviors(player.pos, 0.2, enemies);
         enemy.update();
         enemy.edges();
         enemy.show();
