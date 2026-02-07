@@ -34,6 +34,10 @@ class Player extends Vehicle {
         // Audio
         this.shootSound = new Audio('assets/audio/shoot.m4a');
         this.shootSound.volume = 0.4; // Adjusted for better mix
+
+        // Invulnerability Logic
+        this.invulnerabilityTimer = 0;
+        this.invulnerabilityDuration = 60; // 1 second of i-frames
     }
 
     applyPermanentPowerUp(type, value) {
@@ -132,6 +136,9 @@ class Player extends Vehicle {
         if (this.wallCooldown > 0) {
             this.wallCooldown--;
         }
+        if (this.invulnerabilityTimer > 0) {
+            this.invulnerabilityTimer--;
+        }
     }
 
     shoot(projectiles) {
@@ -191,6 +198,11 @@ class Player extends Vehicle {
     }
 
     takeDamage(amount) {
+        // Check invulnerability
+        if (this.invulnerabilityTimer > 0) {
+            return;
+        }
+
         if (this.hasShield && this.shieldCount > 0) {
             // Shield absorbs damage and loses 1 charge
             this.shieldCount--;
@@ -200,10 +212,16 @@ class Player extends Vehicle {
                 this.hasShield = false;
                 this.shieldCount = 0;
             }
+            // Trigger i-frames even on shield hit to prevent instant shield drain
+            this.invulnerabilityTimer = this.invulnerabilityDuration;
             return; // No damage taken
         }
 
         this.health -= amount;
+
+        // Trigger invulnerability
+        this.invulnerabilityTimer = this.invulnerabilityDuration;
+
         if (this.health <= 0) {
             this.health = 0;
             this.isAlive = false;
@@ -214,34 +232,42 @@ class Player extends Vehicle {
         push();
         translate(this.pos.x, this.pos.y);
 
-        // Shield effect
-        if (this.hasShield) {
-            noFill();
-            stroke(0, 255, 255);
-            strokeWeight(3);
-            let shieldSize = this.r * 3 + sin(frameCount * 0.1) * 5;
-            circle(0, 0, shieldSize);
-        }
-
-        // Draw Player Sprite
-        if (playerSprite) {
-            imageMode(CENTER);
-            // Draw slightly larger than hit circle for visual appeal
-            let displaySize = this.r * 2.5;
-
-            // Flip sprite if moving left
-            if (this.vel.x < 0) {
-                push();
-                scale(-1, 1);
-                image(playerSprite, 0, 0, displaySize, displaySize);
-                pop();
-            } else {
-                image(playerSprite, 0, 0, displaySize, displaySize);
-            }
+        // Invulnerability Flash (don't draw every frame)
+        if (this.invulnerabilityTimer > 0 && frameCount % 4 < 2) {
+            // Skip drawing sprite to create flash effect
+            // But still draw health bar?
+            // Actually, usually the whole sprite flashes.
         } else {
-            // Fallback if sprite not loaded (debug)
-            fill(0, 255, 0);
-            circle(0, 0, this.r * 2);
+
+            // Shield effect
+            if (this.hasShield) {
+                noFill();
+                stroke(0, 255, 255);
+                strokeWeight(3);
+                let shieldSize = this.r * 3 + sin(frameCount * 0.1) * 5;
+                circle(0, 0, shieldSize);
+            }
+
+            // Draw Player Sprite
+            if (playerSprite) {
+                imageMode(CENTER);
+                // Draw slightly larger than hit circle for visual appeal
+                let displaySize = this.r * 2.5;
+
+                // Flip sprite if moving left
+                if (this.vel.x < 0) {
+                    push();
+                    scale(-1, 1);
+                    image(playerSprite, 0, 0, displaySize, displaySize);
+                    pop();
+                } else {
+                    image(playerSprite, 0, 0, displaySize, displaySize);
+                }
+            } else {
+                // Fallback if sprite not loaded (debug)
+                fill(0, 255, 0);
+                circle(0, 0, this.r * 2);
+            }
         }
 
         // Draw health bar above character (modern design)
