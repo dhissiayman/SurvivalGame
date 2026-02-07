@@ -143,6 +143,10 @@ class StageManager {
         this.bossActive = true;
 
         // Switch music to Boss Theme
+        if (this.levelUpSound) {
+            this.levelUpSound.pause();
+            this.levelUpSound.currentTime = 0;
+        }
         if (typeof window.battleTheme !== 'undefined' && window.battleTheme) {
             window.battleTheme.pause();
         }
@@ -212,8 +216,9 @@ class StageManager {
         this.currentLevel++;
         this.killsThisLevel = 0;
 
-        // Play victory sound and manage battle theme
-        if (this.levelUpSound) {
+        // Play victory sound ONLY if NOT a boss level
+        // (If boss level, we want immediate transition to Boss Music)
+        if (this.currentLevel % 5 !== 0 && this.levelUpSound) {
             // STOP ALL OTHER MUSIC
             if (this.bossMusic) {
                 this.bossMusic.pause();

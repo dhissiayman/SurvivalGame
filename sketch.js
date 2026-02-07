@@ -280,7 +280,25 @@ function draw() {
         projectile.applyBehaviors(projectiles, targets);
 
         projectile.update();
+
+        // Fading effect in sketch (last 60 frames)
+        let alpha = 1;
+        if (projectile.lifespan < 60) {
+            alpha = map(projectile.lifespan, 0, 60, 0, 1);
+        }
+
+        push();
+        // apply alpha to entire projectile draw
+        drawingContext.globalAlpha = alpha;
         projectile.show();
+        pop(); // reset context
+        drawingContext.globalAlpha = 1; // ensure reset
+
+        // Projectile Removal (Explicit check here as requested)
+        if (projectile.lifespan <= 0) {
+            projectiles.splice(i, 1);
+            continue;
+        }
 
         // Check boss collision first
         if (stageManager.bossActive && stageManager.currentBoss) {
@@ -306,6 +324,7 @@ function draw() {
         }
 
         if (!projectile.isAlive) {
+            // console.log("Projectile removed!"); // Debugging
             projectiles.splice(i, 1);
             continue;
         }

@@ -11,7 +11,7 @@ class Projectile extends Vehicle {
         this.maxSpeed = 10;
         this.maxForce = 0.3;
         this.homingEnabled = true;
-        this.health = 10;
+        this.lifespan = 200; // 5 seconds at 60 FPS
     }
 
     // Seek implemented in Vehicle
@@ -62,6 +62,12 @@ class Projectile extends Vehicle {
         // Vehicle update (physics)
         super.update();
 
+        // Lifespan check
+        this.lifespan--;
+        if (this.lifespan <= 0) {
+            this.isAlive = false;
+        }
+
         // Remove if off screen (Override behavior: delete instead of wrap or constraint)
         if (this.pos.x < 0 || this.pos.x > width ||
             this.pos.y < 0 || this.pos.y > height) {
@@ -82,8 +88,7 @@ class Projectile extends Vehicle {
         translate(this.pos.x, this.pos.y);
         rotate(this.vel.heading());
 
-        // Neon Glow Effect (simulated with layers for performance or shadowBlur if small count)
-        // Since projectiles are few, shadowBlur might be okay, but let's use layers for safety
+        // Neon Glow Effect
         // Core
         noStroke();
         fill(200, 255, 255); // White-cyan core
