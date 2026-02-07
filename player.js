@@ -135,8 +135,9 @@ class Player extends Vehicle {
     }
 
     shoot(projectiles) {
-        // Check limit
-        if (projectiles.length >= this.maxProjectilesOnScreen) {
+        // Calculate available slots
+        let availableSlots = this.maxProjectilesOnScreen - projectiles.length;
+        if (availableSlots <= 0) {
             return;
         }
 
@@ -144,36 +145,48 @@ class Player extends Vehicle {
 
         if (this.shootCooldown <= 0) {
             // Shoot toward mouse
+            if (projectiles.length >= this.maxProjectilesOnScreen) {
+                return;
+            }
+
             let direction = createVector(mouseX - this.pos.x, mouseY - this.pos.y);
             direction.normalize();
 
-            let totalShots = 1 + this.shotBonus;
+            // Calculate potential shots
+            let desiredShots = 1 + this.shotBonus;
 
-            if (totalShots === 1) {
-                // Single shot
-                let projectile = new Projectile(this.pos.x, this.pos.y, direction);
-                projectiles.push(projectile);
-            } else {
-                // Multi-shot (spread)
-                let spreadAngle = PI / 6; // 30 degrees spread
-                for (let i = 0; i < totalShots; i++) {
-                    let angle = direction.heading() +
-                        map(i, 0, totalShots - 1, -spreadAngle, spreadAngle);
-                    let dir = p5.Vector.fromAngle(angle);
-                    let projectile = new Projectile(this.pos.x, this.pos.y, dir);
+            // Limit by available slots
+            let totalShots = min(desiredShots, availableSlots);
+
+            if (totalShots > 0) {
+                if (totalShots === 1) {
+                    // Single shot
+                    let projectile = new Projectile(this.pos.x, this.pos.y, direction);
                     projectiles.push(projectile);
+                } else {
+                    // Multi-shot (spread)
+                    let spreadAngle = PI / 6; // 30 degrees spread
+                    for (let i = 0; i < totalShots; i++) {
+                        // Avoid division by zero if totalShots is 1 (though handled by if/else above)
+                        let angleOffset = map(i, 0, totalShots - 1, -spreadAngle, spreadAngle);
+                        let angle = direction.heading() + angleOffset;
+
+                        let dir = p5.Vector.fromAngle(angle);
+                        let projectile = new Projectile(this.pos.x, this.pos.y, dir);
+                        projectiles.push(projectile);
+                    }
                 }
-            }
 
-            // Play shoot sound
-            if (this.shootSound) {
-                // Use cloneNode to allow overlapping sounds
-                let soundClone = this.shootSound.cloneNode(true);
-                soundClone.volume = this.shootSound.volume;
-                soundClone.play().catch(e => { /* Ignore autoplay errors */ });
-            }
+                // Play shoot sound
+                if (this.shootSound) {
+                    // Use cloneNode to allow overlapping sounds
+                    let soundClone = this.shootSound.cloneNode(true);
+                    soundClone.volume = this.shootSound.volume;
+                    soundClone.play().catch(e => { /* Ignore autoplay errors */ });
+                }
 
-            this.shootCooldown = shootDelay;
+                this.shootCooldown = shootDelay;
+            }
         }
     }
 
