@@ -93,7 +93,7 @@ class SpeedPowerUp extends PowerUp {
     constructor(x, y) {
         super(x, y, 'speed');
         this.color = color(0, 255, 255);
-        this.speedBoost = 2; // Additive boost
+        this.speedBoost = 1; // Additive boost
     }
 
     activate(player) {
@@ -232,13 +232,28 @@ class WanderPowerUp extends PowerUp {
 
 // Factory function to create random power-ups
 function createRandomPowerUp(x, y) {
-    let types = [
-        SpeedPowerUp,
-        FireRatePowerUp,
-        MultiShotPowerUp,
-        ShieldPowerUp,
-        HealthPowerUp
-    ];
+    let types = [];
+
+    // Permanent Upgrades (LIMIT to ~13 pickups each)
+    // Speed: +1 per pickup -> Max 16 total speed (Base 10 + 6)
+    if (player && player.speedBonus < 6) {
+        types.push(SpeedPowerUp);
+    }
+    // Fire Rate: +2 per pickup -> Max 26
+    if (player && player.fireRateBonus < 26) {
+        types.push(FireRatePowerUp);
+    }
+    // MultiShot: +1 per pickup -> Max 13
+    if (player && player.shotBonus < 13) {
+        types.push(MultiShotPowerUp);
+    }
+
+    // Always available (Consumables / Survival)
+    types.push(ShieldPowerUp);
+    types.push(HealthPowerUp);
+
+    // Make utility items slightly more common if upgrades are maxed?
+    // For now, equal probability among available types
 
     let PowerUpClass = random(types);
     return new PowerUpClass(x, y);
